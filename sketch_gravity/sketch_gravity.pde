@@ -4,6 +4,9 @@ class Attract {
   PVector position;
   PVector velocity = new PVector(0, 0);
   PVector accleration = new PVector(0, 0);
+  float angle = 0;
+  float angleVelocity = 0;
+  float angleAccleration = 0;
   float mass;
   float G = 0.1;
   Attract(float x, float y, float mass_) {
@@ -24,13 +27,23 @@ class Attract {
   }
   void update() {
     this.velocity.add(this.accleration);
+    this.angleAccleration = accleration.x/10;
     this.position.add(this.velocity);
     this.accleration.mult(0);
+    this.angleVelocity = this.angleVelocity + this.angleAccleration;
+    this.angleVelocity = constrain(this.angleVelocity, -0.1, 0.1);
+    this.angle = this.angle + this.angleVelocity;
   }
   void show() {
     stroke(0);
     fill(127);
-    circle(this.position.x, this.position.y, mass*13);
+    float r = mass*13;
+    pushMatrix();
+    translate(this.position.x, this.position.y);
+    rotate(this.angle);
+    circle(0, 0, r);
+    line(0, 0, r/2, 0);
+    popMatrix();
   }
 }
 
