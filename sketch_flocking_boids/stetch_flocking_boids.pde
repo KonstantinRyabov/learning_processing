@@ -3,7 +3,7 @@ class Vehicle {
   PVector velocity = new PVector(0, 0);
   PVector accleration = new PVector(0, 0);
   float r = 6;
-  float maxSpeed = 3;
+  float maxSpeed = 8;
   float maxForce = 0.4;
 
   Vehicle(float x, float y) {
@@ -19,7 +19,19 @@ class Vehicle {
     this.position.add(this.velocity);
     this.accleration.mult(0);
   }
-
+  void arrival(PVector target) {
+    PVector desired = PVector.sub(target, position);
+    float d = desired.mag();
+    if (d < 100) {
+      float m = map(d, 0, 100, 0, maxSpeed);
+      desired.setMag(m);
+    } else {
+      desired.setMag(maxSpeed);
+    }
+    PVector steer = PVector.sub(desired, velocity);
+    steer.limit(maxForce);
+    this.applyForce(steer);
+  }
   void seeking(PVector target) {
     PVector desired = PVector.sub(target, position);
     desired.limit(maxSpeed);
@@ -55,7 +67,7 @@ void draw() {
   fill(127);
   stroke(0);
   circle(mouseX, mouseY, 20);
-  vehicle.seeking(target);
+  vehicle.arrival(target);
   vehicle.update();
   vehicle.show();
 }
