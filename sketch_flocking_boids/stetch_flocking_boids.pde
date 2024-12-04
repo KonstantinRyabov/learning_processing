@@ -3,8 +3,8 @@ class Vehicle {
   PVector velocity = new PVector(0, 0);
   PVector accleration = new PVector(0, 0);
   float r = 6;
-  float maxSpeed = 8;
-  float maxForce = 0.4;
+  float maxSpeed = 40;
+  float maxForce = 0.5;
 
   Vehicle(float x, float y) {
     position = new PVector(x, y);
@@ -19,6 +19,7 @@ class Vehicle {
     this.position.add(this.velocity);
     this.accleration.mult(0);
   }
+
   void arrival(PVector target) {
     PVector desired = PVector.sub(target, position);
     float d = desired.mag();
@@ -32,12 +33,20 @@ class Vehicle {
     steer.limit(maxForce);
     this.applyForce(steer);
   }
-  void seeking(PVector target) {
-    PVector desired = PVector.sub(target, position);
+
+  void seeking(FlowFields flow) {
+    PVector desired = flow.lookup(this.position);
     desired.limit(maxSpeed);
     PVector steer = PVector.sub(desired, velocity);
     steer.limit(maxForce);
     this.applyForce(steer);
+  }
+
+  void borders() {
+    if (this.position.x < -this.r) this.position.x = width + this.r;
+    if (this.position.y < -this.r) this.position.y = height + this.r;
+    if (this.position.x > width + this.r) this.position.x = -this.r;
+    if (this.position.y > height + this.r) this.position.y = -this.r;
   }
 
   void show() {
@@ -55,19 +64,77 @@ class Vehicle {
     popMatrix();
   }
 }
-Vehicle vehicle;
+class FlowFields {
+  float r;
+  PVector[][] arr;
+  int cols;
+  int rows;
+  FlowFields(float _r) {
+    r = _r;
+    int i = int(width / r);
+    int j = int(height / r);
+    arr = new PVector [i][j];
+    cols = arr.length;
+    rows = arr[0].length;
+    init();
+  }
+
+  void init() {
+    float xoff = 0;
+    for (int i = 0; i < this.cols; i++) {
+      float yoff = 0;
+      for (int j = 0; j < this.rows; j++) {
+        float angle = map(noise(xoff, yoff), 0, 1, 0, TWO_PI);
+        arr[i][j] = PVector.fromAngle(angle);
+        yoff += 0.1;
+      }
+      xoff += 0.1;
+    }
+  }
+  void show() {
+    for (int i = 0; i < this.cols; i++) {
+      for (int j = 0; j < this.rows; j++) {
+        int w = width / this.cols;
+        int h = height / this.rows;
+        PVector v = this.arr[i][j].copy();
+        v.setMag(w * 0.5);
+        int x = i * w + w / 2;
+        int y = j * h + h / 2;
+        strokeWeight(1);
+        line(x, y, x + v.x, y + v.y);
+      }
+    }
+  }
+
+  PVector lookup(PVector position) {
+    int column = int(constrain(floor(position.x / this.r), 0, this.arr.length - 1));
+    int row = int(constrain(floor(position.y / this.r), 0, this.arr[0].length - 1));
+    return this.arr[column][row].copy();
+  }
+}
+
+FlowFields flow;
+Vehicle[] vehicles = new Vehicle[30];
 void setup() {
   size(640, 640);
-  vehicle = new Vehicle(width/2, height/2);
+  flow = new FlowFields(20);
+
+  for (int i = 0; i < vehicles.length; i++) {
+    vehicles[i] = new Vehicle(random(width), random(height));
+  }
 }
 
 void draw() {
   background(255);
-  PVector target = new PVector(mouseX, mouseY);
   fill(127);
   stroke(0);
-  circle(mouseX, mouseY, 20);
-  vehicle.arrival(target);
-  vehicle.update();
-  vehicle.show();
+
+  for (int i = 0; i < vehicles.length; i++) {
+    vehicles[i].seeking(flow);
+    vehicles[i].update();
+    vehicles[i].borders();
+    vehicles[i].show();
+  }
+  
+ flow.show();
 }
