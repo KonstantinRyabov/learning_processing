@@ -52,7 +52,7 @@ class Vehicle {
   void show() {
     float angle = this.velocity.heading();
     fill(125);
-    stroke(0);
+    stroke(255);
     pushMatrix();
     translate(this.position.x, this.position.y);
     rotate(angle);
@@ -116,7 +116,7 @@ class FlowFields {
 FlowFields flow;
 Vehicle[] vehicles = new Vehicle[30];
 void setup() {
-  size(640, 640);
+  size(1024, 1024);
   flow = new FlowFields(20);
 
   for (int i = 0; i < vehicles.length; i++) {
@@ -125,9 +125,9 @@ void setup() {
 }
 
 void draw() {
-  background(255);
+  background(0);
   fill(127);
-  stroke(0);
+  stroke(255);
 
   for (int i = 0; i < vehicles.length; i++) {
     vehicles[i].seeking(flow);
